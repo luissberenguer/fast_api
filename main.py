@@ -1,8 +1,11 @@
 # Python
 from typing import Optional
+from enum import Enum
 
 # Pydantic
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic import EmailStr, HttpUrl
+
 
 # FastAPI
 from fastapi import FastAPI
@@ -13,18 +16,66 @@ app = FastAPI()
 # Models
 
 
+class HairColor(Enum):
+    white = "white"
+    brown = "brown"
+    black = "black"
+    blonde = "blonde"
+    red = "red"
+    blue = "blue"
+
+
 class Location(BaseModel):
-    city: str
-    state: str
-    country: str
+    city: str = Field(
+        ...,
+        min_length=1,
+        max_length=20,
+        example="Eclhe"
+    )
+
+    state: str = Field(
+        ...,
+        min_length=1,
+        max_length=20,
+        example="Alicante"
+    )
+    country: str = Field(
+        ...,
+        min_length=1,
+        max_length=20,
+        example="Spain"
+    )
 
 
 class Person(BaseModel):
-    first_name: str
-    last_name: str
-    age: int
-    hair_color: Optional[str] = None
-    is_married: Optional[bool] = None
+    first_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=50
+    )
+    last_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=50
+    )
+    age: int = Field(
+        ...,
+        gt=0,
+        lt=115
+    )
+    hair_color: Optional[HairColor] = Field(default=None)
+    is_married: Optional[bool] = Field(default=None)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "first_name": "Luis",
+                "last_name": "Berenguer",
+                "age": 24,
+                "hair_color": "black",
+                "is_married": False
+            }
+        }
 
 
 @app.get('/')
