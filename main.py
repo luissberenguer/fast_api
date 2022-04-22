@@ -1,15 +1,14 @@
 # Python
-from doctest import Example
 from typing import Optional
 from enum import Enum
 
 # Pydantic
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 # FastAPI
-from fastapi import FastAPI, status
-from fastapi import Body, Query, Path, Form, Cookie, Header
+from fastapi import FastAPI, UploadFile, status, HTTPException
+from fastapi import Body, Query, Path, Form, Cookie, Header, File
 
 app = FastAPI()
 
@@ -140,6 +139,9 @@ def show_person(
 # Validaciones: Request Body
 
 
+persons = [1, 2, 3, 4, 5]
+
+
 @app.put("/person/{person_id}", status_code=status.HTTP_200_OK)
 def update_person(
     person_id: int = Path(
@@ -154,6 +156,10 @@ def update_person(
     results = person.dict()
     results.update(location.dict())
     # person.dict() & location.dict()   # Esta sintaxis no la soporta Fast API
+    if person_id not in persons:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+
+                            )
     return results
 
 
@@ -164,3 +170,46 @@ def update_person(
 )
 def login(username: str = Form(...), password: str = Form(...)):
     return LoginOut(username=username)
+
+
+# Cookies and Headers Parameters
+
+@app.post(
+    path="/contact",
+    status_code=status.HTTP_200_OK
+)
+def contact(
+    first_name: str = Form(
+        ...,
+        max_length=20,
+        min_length=1
+    ),
+    last_name: str = Form(
+        ...,
+        max_length=20,
+        min_length=1
+    ),
+    email: EmailStr = Form(...),
+    message: str = Form(
+        ...,
+        min_length=20,
+    ),
+    user_agent: Optional[str] = Header(default=None),
+    ads: Optional[str] = Cookie(default=None)
+):
+    return user_agent
+
+
+# Files
+
+@app.post(
+    path="/post-image"
+)
+def post_image(
+    image: UploadFile = File(...)
+):
+    return {
+        "Filename": image.filename,
+        "Format": image.content_type,
+        "Size(kb)": round(len(image.file.read())/1024, ndigits=2)
+    }
