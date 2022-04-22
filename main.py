@@ -157,9 +157,10 @@ def update_person(
     results.update(location.dict())
     # person.dict() & location.dict()   # Esta sintaxis no la soporta Fast API
     if person_id not in persons:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-
-                            )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This person does not exist."
+        )
     return results
 
 
