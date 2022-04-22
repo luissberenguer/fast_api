@@ -1,15 +1,15 @@
 # Python
+from doctest import Example
 from typing import Optional
 from enum import Enum
 
 # Pydantic
 from pydantic import BaseModel, Field
-from pydantic import EmailStr, HttpUrl
 
 
 # FastAPI
-from fastapi import FastAPI
-from fastapi import Body, Query, Path
+from fastapi import FastAPI, status
+from fastapi import Body, Query, Path, Form, Cookie, Header
 
 app = FastAPI()
 
@@ -47,7 +47,7 @@ class Location(BaseModel):
     )
 
 
-class Person(BaseModel):
+class PersonBase(BaseModel):
     first_name: str = Field(
         ...,
         min_length=1,
@@ -65,66 +65,46 @@ class Person(BaseModel):
     )
     hair_color: Optional[HairColor] = Field(default=None)
     is_married: Optional[bool] = Field(default=None)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "first_name": "Luis",
+                "last_name": "Berenguer",
+                "age": 24,
+                "hair_color": "black",
+                "is_married": False
+            }
+        }
+
+
+class Person(PersonBase):
     password: str = Field(..., min_length=8, max_length=150)
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "first_name": "Luis",
-                "last_name": "Berenguer",
-                "age": 24,
-                "hair_color": "black",
-                "is_married": False
-            }
-        }
+
+class PersonOut(PersonBase):
+    pass
 
 
-class PersonOut(BaseModel):
-    first_name: str = Field(
-        ...,
-        min_length=1,
-        max_length=50
-    )
-    last_name: str = Field(
-        ...,
-        min_length=1,
-        max_length=50
-    )
-    age: int = Field(
-        ...,
-        gt=0,
-        lt=115
-    )
-    hair_color: Optional[HairColor] = Field(default=None)
-    is_married: Optional[bool] = Field(default=None)
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "first_name": "Luis",
-                "last_name": "Berenguer",
-                "age": 24,
-                "hair_color": "black",
-                "is_married": False
-            }
-        }
+class LoginOut(BaseModel):
+    username: str = Field(..., max_length=20, exmple="luissberenguer")
 
 
-@app.get('/')
+@app.get('/', status_code=status.HTTP_200_OK)
 def home():
     return {"Hello": "World"}
 
 # Request and response body
 
 
-@app.post('/person/new', response_model=PersonOut)
+@app.post('/person/new', response_model=PersonOut, status_code=status.HTTP_201_CREATED)
 def create_person(person: Person = Body(...)):
     return person
 
 # Validaciones queries parameters
 
 
-@app.get('/person/detail')
+@app.get('/person/detail', status_code=status.HTTP_200_OK)
 def show_person(
     name: Optional[str] = Query(
         None,
@@ -146,7 +126,7 @@ def show_person(
 # Vlidaciones: Path Parameters
 
 
-@app.get('/person/detail/{person_id}')
+@app.get('/person/detail/{person_id}', status_code=status.HTTP_200_OK)
 def show_person(
     peron_id: int = Path(
         ...,
@@ -160,7 +140,7 @@ def show_person(
 # Validaciones: Request Body
 
 
-@app.put("/person/{person_id}")
+@app.put("/person/{person_id}", status_code=status.HTTP_200_OK)
 def update_person(
     person_id: int = Path(
         ...,
@@ -175,3 +155,12 @@ def update_person(
     results.update(location.dict())
     # person.dict() & location.dict()   # Esta sintaxis no la soporta Fast API
     return results
+
+
+@app.post(
+    path="/login",
+    response_model=LoginOut,
+    status_code=status.HTTP_200_OK
+)
+def login(username: str = Form(...), password: str = Form(...)):
+    return LoginOut(username=username)
