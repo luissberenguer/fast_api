@@ -89,21 +89,45 @@ class LoginOut(BaseModel):
     username: str = Field(..., max_length=20, exmple="luissberenguer")
 
 
-@app.get('/', status_code=status.HTTP_200_OK)
+@app.get(
+    path='/',
+    status_code=status.HTTP_200_OK,
+    tags=["Otros"]
+)
 def home():
     return {"Hello": "World"}
 
 # Request and response body
 
 
-@app.post('/person/new', response_model=PersonOut, status_code=status.HTTP_201_CREATED)
+@app.post(
+    path='/person/new',
+    response_model=PersonOut,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Persons"],
+    summary="Creates Person in the app"
+)
 def create_person(person: Person = Body(...)):
+    """"
+    Create Person 
+
+    This path operation creates a person in the app and saves the information in the database
+    Parameters:
+    - Request body parameter:
+        - **person: Person** -> A person model with first name, last name, age, hair color and marital status
+
+    Returns a person model with first name, last name, age, hair color...
+    """
     return person
 
 # Validaciones queries parameters
 
 
-@app.get('/person/detail', status_code=status.HTTP_200_OK)
+@app.get(
+    path='/person/detail',
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"]
+)
 def show_person(
     name: Optional[str] = Query(
         None,
@@ -118,20 +142,24 @@ def show_person(
         title="Person Age",
         description="This is the person age. It's required",
         example=24
-    )
+    ),
 ):
     return {name: age}
 
 # Vlidaciones: Path Parameters
 
 
-@app.get('/person/detail/{person_id}', status_code=status.HTTP_200_OK)
+@app.get(
+    path='/person/detail/{person_id}',
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"]
+)
 def show_person(
     peron_id: int = Path(
         ...,
         gt=0,
         title="Person Id",
-        description="This is the person id. It's required."
+        description="This is the person id. It's required.",
     )
 ):
     return {peron_id: 'Ese id existe!'}
@@ -142,7 +170,11 @@ def show_person(
 persons = [1, 2, 3, 4, 5]
 
 
-@app.put("/person/{person_id}", status_code=status.HTTP_200_OK)
+@app.put(
+    path="/person/{person_id}",
+    status_code=status.HTTP_200_OK,
+    tags=["Persons"]
+)
 def update_person(
     person_id: int = Path(
         ...,
@@ -151,7 +183,7 @@ def update_person(
         gt=0
     ),
     person: Person = Body(...),
-    location: Location = Body(...)
+    location: Location = Body(...),
 ):
     results = person.dict()
     results.update(location.dict())
@@ -167,7 +199,8 @@ def update_person(
 @app.post(
     path="/login",
     response_model=LoginOut,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Otros"]
 )
 def login(username: str = Form(...), password: str = Form(...)):
     return LoginOut(username=username)
@@ -177,7 +210,8 @@ def login(username: str = Form(...), password: str = Form(...)):
 
 @app.post(
     path="/contact",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Otros"]
 )
 def contact(
     first_name: str = Form(
@@ -204,7 +238,8 @@ def contact(
 # Files
 
 @app.post(
-    path="/post-image"
+    path="/post-image",
+    tags=["Otros"]
 )
 def post_image(
     image: UploadFile = File(...)
